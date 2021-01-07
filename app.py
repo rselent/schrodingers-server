@@ -11,3 +11,16 @@
 # ==========================================================
 # ==========================================================
 
+
+import socket
+
+# Ask user for single domain to check (temp, expand later)
+
+# Check if input is actual domain (if missing required structure, attempt add?)
+
+# Get DNS address for input
+
+# Request HEAD of given address
+
+# Display UP/DOWN status
+
