@@ -14,32 +14,50 @@
 
 import socket
 
-DEBUG = 2
+
+DEBUG = 1			# DEBUG LEVEL
+					# 0 = OFF
+					# 1 = BASIC CONSOLE OUTPUT
+					# 2 = BASIC + ADVANCED
+
 
 SOCK4T = socket.socket(socket.AF_INET, socket.SOCK_STREAM)		# IPv4 TCP sock
 SOCK6T = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)		# IPv6 TCP sock
 TIMEOUT = 3
 
 
-# class baseCheck( object):			# setting this here, indicating plans
-#									# for later
+# class baseCheck( object):			# putting this here for later
+#
 # 	def __init__( self):
 # 		...
 
 
-def userInput():
+def domainInput():
 	"""
 	Ask user for single domain to check (temp, expand later)
 	"""
+	global domainDict
 
-	urlInput = input( "\nEnter domain to check: ")
+	print( "\n" * 3, end= '')
 
-	if DEBUG == 2: print( "input\t", urlInput)
+	print( "Hello user! Please enter up to 10 domains that you'd like to check.")
+	print( "Pressing ENTER without a domain input will end this early", \
+		"and advance to the results.")
+	print( "\nEnter domain:\t", end= '')
+	urlInput = input()
+
+#	for i in range( 10):
+#		urlInput = input()
+
+
+
+
+	if DEBUG == 2: print( "input value\t", urlInput)
 
 	return urlInput
 
 
-def userCheck( urlMaybe= ""):
+def domainCheck( urlMaybe= ""):
 	"""
 	Checks if given input is a potentially valid domain.
 
@@ -51,10 +69,11 @@ def userCheck( urlMaybe= ""):
 	String is probably a valid domain
 	"""
 	global BIGOOF
+	global domainDict
 
 	if urlMaybe == "":
 		BIGOOF = 1
-		print( BIGOOF, "ERROR: URL string is empty.\n")
+		print( "ERROR: URL string is empty.\n")
 		return					# can we throw an exception instead?
 	else:
 		urlMaybe = urlMaybe.lower()
@@ -66,13 +85,13 @@ def userCheck( urlMaybe= ""):
 		if urlMaybe[:4] == 'www.':
 			urlMaybe = urlMaybe[4:]
 
-		if DEBUG == 2: print( "check\t", urlMaybe)
+		if DEBUG == 2: print( "after check\t", urlMaybe)
 
 		if urlMaybe[-4] == "." or urlMaybe[-3] == ".":
 			return urlMaybe
 		else:
 			BIGOOF = 1
-			print( BIGOOF, "ERROR: URL given does not look valid.\n")
+			print( "ERROR: URL given does not look valid.\n")
 			return				# can we throw an exception instead?
 
 
@@ -81,10 +100,11 @@ def getIP( urlProbably= "", port= 80, protocol= socket.IPPROTO_TCP):
 	Get IPv4 and IPv6 addresses via DNS lookup
 	"""
 	global BIGOOF
+	global domainDict
 
 	if urlProbably == "":
 		BIGOOF = 1
-		print( BIGOOF, "ERROR: URL string is empty. Halting DNS lookup\n")
+		print( "ERROR: URL string is empty. Halting DNS lookup\n")
 		return					# can we throw an exception instead?
 	else:
 		ipResult = socket.getaddrinfo( urlProbably, port, proto= protocol)
@@ -92,8 +112,8 @@ def getIP( urlProbably= "", port= 80, protocol= socket.IPPROTO_TCP):
 		ipv6Result = ipResult[0][4][0]
 
 		if DEBUG == 2: 
-			print( "raw\t", ipResult)
-			print( "get\t", ipv4Result, "\t", ipv6Result)
+			print( "ip addresses\t", ipv4Result, "\t", ipv6Result)
+			print( "raw info\t", ipResult)
 
 		return ipv6Result, ipv4Result
 
@@ -109,9 +129,13 @@ def headRequest( urlDefinitely= "", useipv6= False):
 	try:
 		if useipv6 == True:
 			SOCK6T.connect( (urlDefinitely[0], 80, 0, 0))
+			SOCK6T.shutdown( socket.SHUT_RDWR)
+			SOCK6T.close()
 			return True
 		else:
 			SOCK4T.connect( (urlDefinitely[1], 80))
+			SOCK4T.shutdown( socket.SHUT_RDWR)
+			SOCK4T.close()
 			return True
 	except socket.error as oof:
 		print( oof)
@@ -124,15 +148,24 @@ def dispStatus( upDownBool, serviceName):
 	"""
 	Display UP/DOWN status
 	"""
-	if DEBUG == 1:
-		...
+
+	structure = []
+
+	if DEBUG >= 1:
+		print( "\n", end= '')
+		print( "=" * 120)
+#		print( "\tSERVICE\t\t\t\tIPv4/IPv6\t\tUP/DOWN")
+		print( "\tSERVICE\t\t\t\t\tUP/DOWN")
+		print( "-" * 120)
 	
-	if upDownBool == True:
-#		print( "Service is UP\n\n")
-		return f"\nService {serviceName} is UP\n\n"
-	else:
-#		print( "Cannot connect to service\n\n")
-		return f"\nCannot connect to {serviceName}\n\n"
+		if upDownBool == True:
+			print( f"\t{serviceName}\t\t\t\tUP")
+#			return f"\nService {serviceName} is UP\n\n"
+		else:
+			print( f"\t{serviceName}\t\t\t\tDOWN")
+#			return f"\nCannot connect to {serviceName}\n\n"
+
+		print( "=" * 120, "\n")
 
 
 
@@ -140,13 +173,15 @@ if __name__ == "__main__":
 
 	BIGOOF = 0
 
-	mainInput = userInput()
-	checkedInput = userCheck( mainInput)
+	domainDict = {}
+
+	mainInput = domainInput()
+	checkedInput = domainCheck( mainInput)
 
 	if BIGOOF == 0:
 		gotIP = getIP( checkedInput)
 		upDown = headRequest( gotIP, useipv6= False)
-		print( dispStatus( upDown, checkedInput))
+		dispStatus( upDown, checkedInput)
 	else:
 		print( "BIGOOF THROWN. service discovery aborted. please try again with a valid URL.\n")
 
