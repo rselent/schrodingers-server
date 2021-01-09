@@ -15,7 +15,7 @@
 import socket
 
 
-DEBUG = 1			# DEBUG LEVEL
+DEBUG = 2			# DEBUG LEVEL
 					# 0 = OFF
 					# 1 = BASIC CONSOLE OUTPUT
 					# 2 = BASIC + ADVANCED
@@ -26,35 +26,43 @@ SOCK6T = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)		# IPv6 TCP sock
 TIMEOUT = 3
 
 
-# class baseCheck( object):			# putting this here for later
-#
-# 	def __init__( self):
-# 		...
 
 
 def domainInput():
 	"""
 	Ask user for single domain to check (temp, expand later)
 	"""
-	global domainDict
+#	global domainDict
+	inputDict = {}
 
 	print( "\n" * 3, end= '')
 
 	print( "Hello user! Please enter up to 10 domains that you'd like to check.")
 	print( "Pressing ENTER without a domain input will end this early", \
 		"and advance to the results.")
-	print( "\nEnter domain:\t", end= '')
+	print( "\nEnter domain:\t ", end= '')
+
 	urlInput = input()
 
-#	for i in range( 10):
-#		urlInput = input()
+	for i in range( 10):
+		inputDict[i] = [""]
 
+		if DEBUG == 2:
+			print( "input value\t", urlInput)
+		if urlInput == "" and len( inputDict) == 1:
+			break
+		elif urlInput == "":
+			inputDict.popitem()
+			break
 
+		inputDict[i] = [urlInput]
+		if i < 9: 
+			urlInput = input("\t\t ")
 
+	if DEBUG == 2: 
+		print( "\n\t EXIT CALL\ndict values\t", inputDict, "\n")
 
-	if DEBUG == 2: print( "input value\t", urlInput)
-
-	return urlInput
+	return inputDict
 
 
 def domainCheck( urlMaybe= ""):
@@ -154,16 +162,13 @@ def dispStatus( upDownBool, serviceName):
 	if DEBUG >= 1:
 		print( "\n", end= '')
 		print( "=" * 120)
-#		print( "\tSERVICE\t\t\t\tIPv4/IPv6\t\tUP/DOWN")
 		print( "\tSERVICE\t\t\t\t\tUP/DOWN")
 		print( "-" * 120)
 	
 		if upDownBool == True:
 			print( f"\t{serviceName}\t\t\t\tUP")
-#			return f"\nService {serviceName} is UP\n\n"
 		else:
 			print( f"\t{serviceName}\t\t\t\tDOWN")
-#			return f"\nCannot connect to {serviceName}\n\n"
 
 		print( "=" * 120, "\n")
 
